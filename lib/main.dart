@@ -29,7 +29,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   List<Todo> todoList = [];
   @override
   Widget build(BuildContext context) {
@@ -48,6 +47,8 @@ class _HomeState extends State<Home> {
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             TextEditingController dateinput = TextEditingController();
+            TextEditingController nameinput = TextEditingController();
+
             DateTime? selectedDate;
             await showModalBottomSheet(
                 shape: const RoundedRectangleBorder(
@@ -58,15 +59,20 @@ class _HomeState extends State<Home> {
                 context: context,
                 builder: (context) {
                   return SizedBox(
-                    height: 200,
+                    height: 270,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
                         children: [
                           TextField(
+                            controller: nameinput,
+                            decoration:
+                                const InputDecoration(label: Text('Task name')),
+                          ),
+                          TextField(
                             controller: dateinput,
                             decoration:
-                            const InputDecoration(label: Text('Task')),
+                                const InputDecoration(label: Text('Task Date')),
                           ),
                           Row(
                             children: [
@@ -78,8 +84,15 @@ class _HomeState extends State<Home> {
                                         firstDate: DateTime.now(),
                                         lastDate: DateTime.now()
                                             .add(const Duration(days: 30)));
-                                    print(selectedDate.toString());
-                                    setState(() {});
+                                    //  print(selectedDate.toString());
+                                    if (selectedDate != null) {
+                                      String formattedDate =
+                                          DateFormat('yyyy/MM/dd')
+                                              .format(selectedDate!);
+                                      setState(() {
+                                        dateinput.text = formattedDate;
+                                      });
+                                    }
                                   },
                                   icon: const Icon(
                                     Icons.edit_calendar,
@@ -88,9 +101,6 @@ class _HomeState extends State<Home> {
                               const SizedBox(
                                 width: 20,
                               ),
-                              Text(selectedDate != null
-                                  ? selectedDate.toString()
-                                  : "No Date Chosen")
                             ],
                           ),
                           const SizedBox(
@@ -114,8 +124,9 @@ class _HomeState extends State<Home> {
                               ElevatedButton(
                                 onPressed: () {
                                   TodoProvider.instance.insertTodo(Todo(
-                                      name: dateinput.text,
-                                      date: selectedDate!.millisecondsSinceEpoch,
+                                      name: nameinput.text,
+                                      date:
+                                          selectedDate!.millisecondsSinceEpoch,
                                       isChecked: false));
                                   print(todoList);
                                   Navigator.pop(context);
@@ -133,11 +144,57 @@ class _HomeState extends State<Home> {
           },
           child: const Icon(Icons.add),
         ),
-
-        body:
-
-            Padding(
-              padding: const EdgeInsets.all(10),
+        body: Column(
+          children: [
+            Container(
+              height: 120,
+              color: Colors.blue,
+              child: ListTile(
+                title: Row(
+                  children: [
+                    const Text(
+                      '21',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 50,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 40.0,
+                      ),
+                      child: Column(
+                        children: const [
+                          Text(
+                            'Aug',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            '2021',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: const Padding(
+                  padding: EdgeInsets.only(top: 35.0),
+                  child: Text(
+                    'Wednesday',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
               child: FutureBuilder<List<Todo>>(
                 future: TodoProvider.instance.getAllTodo(),
                 builder: (context, snapshot) {
@@ -155,17 +212,18 @@ class _HomeState extends State<Home> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
-                            leading: Checkbox(
-                              value: todo.isChecked,
-                              onChanged: (bool? value) {
-                                setState(() {
+                            leading: Transform.scale(
+                              scale: 2,
+                              child: Checkbox(
+                                shape: CircleBorder(),
+                                value: todo.isChecked,
+                                onChanged: (bool? value) async {
                                   todoList[index].isChecked = value!;
-                                });
-                              setState(() {
-
-                              });
-                              },
-
+                                  await TodoProvider.instance
+                                      .updateTodo(todoList[index]);
+                                  setState(() {});
+                                },
+                              ),
                             ),
                             title: Text(todo.name),
                             subtitle: Text(
@@ -180,7 +238,7 @@ class _HomeState extends State<Home> {
                                   setState(() {});
                                 },
                                 icon: const Icon(
-                                  Icons.delete_forever,
+                                  Icons.delete,
                                   color: Colors.red,
                                 )),
                           ),
@@ -198,66 +256,9 @@ class _HomeState extends State<Home> {
                 },
               ),
             ),
-
-
-
-      ),
-    );
-  }
-}
-class Mystyle extends StatelessWidget {
-  const Mystyle({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return  Container(
-      height: 120,
-      color: Colors.blue,
-      child: ListTile(
-        title: Row(
-          children: [
-            const Text(
-              '21',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 50,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(
-                top: 40.0,
-              ),
-              child: Column(
-                children: const [
-                  Text(
-                    'Aug',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    '2021',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
-        trailing: const Padding(
-          padding: EdgeInsets.only(top: 35.0),
-          child: Text(
-            'Wednesday',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-        ),
       ),
     );
   }
 }
-
